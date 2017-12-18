@@ -17,7 +17,7 @@ colors.setTheme({
     debug: 'blue',
     error: 'red'
 });
-fs.appendFileSync('debug.txt', `1222, 发生于：222\n\n`);
+
 //日期格式化，格式化后:2016-03-09 11:20:12
 Date.prototype.format = function(format) {
     var o = {
