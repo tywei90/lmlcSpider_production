@@ -5,7 +5,7 @@
   "author": "魏天尧 <tywei90@gmail.com>",
   "private": true,
   "scripts": {
-    "server": "pm2 start server/lmlcServer",
+    "server": "supervisor server/lmlcServer",
     "spider": "pm2 start spider/lmlcSpider.js -x -- ",
     "user": "supervisor spider/user.js",
     "product": "supervisor spider/product.js",
