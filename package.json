@@ -5,11 +5,13 @@
   "author": "魏天尧 <tywei90@gmail.com>",
   "private": true,
   "scripts": {
-    "server": "supervisor server/lmlcServer",
+    "dev": "gulp --env development",
+    "build": "gulp --env production",
+    "server": "nodemon --watch server server/lmlcServer",
     "spider": "pm2 start spider/lmlcSpider.js -x -- ",
-    "user": "supervisor spider/user.js",
-    "product": "supervisor spider/product.js",
-    "record": "supervisor spider/record.js"
+    "user": "nodemon --watch spider spider/user.js",
+    "product": "nodemon --watch spider spider/product.js",
+    "record": "nodemon --watch spider spider/record.js"
   },
   "dependencies": {
     "body-parser": "^1.18.2",
@@ -29,7 +31,13 @@
     "superagent-charset": "^0.1.1"
   },
   "devDependencies": {
-    "cross-env": "^1.0.6"
+    "cross-env": "^1.0.6",
+    "gulp": "^3.9.1",
+    "gulp-connect": "^5.0.0",
+    "gulp-less": "^3.3.2",
+    "gulp-minify-css": "^1.2.4",
+    "gulp-uglify": "^3.0.0",
+    "minimist": "^1.2.0"
   },
   "repository": {
     "type": "git",

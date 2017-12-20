@@ -16,7 +16,7 @@ router.post('/getPeriodSales', function(req, res, next) {
     	let date = parseInt(file) || 0;
     	if(date >=start && date <=end){
     		let dataStr = date.toString();
-    		dates.push(dataStr.substr(0,4) + '-' + dataStr.substr(4,2) + '-' + dataStr.substr(6,2));
+    		dates.push(dataStr.substr(0,4) + '/' + dataStr.substr(4,2) + '/' + dataStr.substr(6,2));
     		periodFiles.push(path.join('data/', file));
     	}
     });
