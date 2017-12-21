@@ -69,9 +69,8 @@ let globalTimer = setInterval(function(){
         clearProd = true;
         clearUser = true;
         // 不足一天的不统计
-        if(nowTime - initialTime < 24*60*60*1000) return
-        // 筛选prod数据
-        // 筛选records数据
+        // if(nowTime - initialTime < 24*60*60*1000) return
+        // 筛选prod.records数据
         for(let i=0, len=prod.length; i<len; i++){
             let delArr1 = [];
             for(let j=0, len2=prod[i].records.length; j<len2; j++){
@@ -81,7 +80,7 @@ let globalTimer = setInterval(function(){
             }
             sort.delArrByIndex(lmlc[i].records, delArr1);
         }
-        // 删掉records为空的数据
+        // 删掉prod.records为空的数据
         let delArr2 = [];
         for(let i=0, len=lmlc.length; i<len; i++){
             if(!lmlc[i].records.length){
@@ -93,8 +92,14 @@ let globalTimer = setInterval(function(){
         // 初始化lmlc里的立马金库数据
         lmlc.unshift({
             "productName": "立马金库",
+            "financeTotalAmount": 2147483647,
             "productId": "jsfund",
-            "productType": 6,
+            "yearReturnRate": 4.0,
+            "investementDays": 1,
+            "interestStartTime": (new Date(min)).format("yyyy-MM-dd hh:mm:ss"),
+            "interestEndTime": (new Date(max)).format("yyyy-MM-dd hh:mm:ss"),
+            "getDataTime": (new Date(min)).format("yyyy-MM-dd hh:mm:ss"),
+            "alreadyBuyAmount": 0,
             "records": []
         });
         // 筛选user数据
@@ -115,15 +120,27 @@ let globalTimer = setInterval(function(){
                 delete lmlc[i].records[j].uniqueId
             }
         }
-        // 写入前一天的数据，清空user.json和prod.json
+        // 爬取金库收益，写入前一天的数据，清空user.json和prod.json
         let dateStr = (new Date(nowTime - 10*60*1000)).format("yyyyMMdd");
-        fs.writeFileSync(`data/${dateStr}.json`, JSON.stringify(lmlc));
+        superagent
+            .get('https://www.lmlc.com/web/product/product_list?pageSize=10&pageNo=1&type=1')
+            .end(function(err,pres){
+                // 常规的错误处理
+                if (err) {
+                    handleErr(err.message);
+                    return;
+                }
+                var data = JSON.parse(pres.text).data;
+                var rate = data.result[0].yearReturnRate||4.0;
+                lmlc[0].yearReturnRate = rate;
+                fs.writeFileSync(`data/${dateStr}.json`, JSON.stringify(lmlc));
+        })
     }
 }, 1000);
 
 // 理财list页面ajax爬取已经对应的产品详情页爬取，生成文件: data/prod.json
 let cookie;
-let delay = 5*1000;
+let delay = 30*1000;
 // 防止产品多产生分页需要多次请求获取数据，可以直接设置pageSize为100，这样多页几乎不会出现
 let ajaxUrl = 'https://www.lmlc.com/web/product/product_list?pageSize=100&pageNo=1&type=0';
 let phone = process.argv[2];
@@ -255,13 +272,13 @@ function requestData() {
                         }
                         var $ = cheerio.load(pres.text);
                         var records = [];
-                        var $tr = $('.tabcontent').eq(2).find('tr').slice(1);
+                        var $tr = $('.tabcontent table').find('tr').slice(1);
                         $tr.each(function(){
                             records.push({
                                 username: $('td', $(this)).eq(0).text(),
-                                buyTime: Date.parse($('td', $(this)).eq(1).text()),
+                                buyTime: parseInt($('td', $(this)).eq(1).attr('data-time').replace(/,/g, '')),
                                 buyAmount: parseFloat($('td', $(this)).eq(2).text().replace(/,/g, '')),
-                                uniqueId: $('td', $(this)).eq(0).text() + $('td', $(this)).eq(1).text() + $('td', $(this)).eq(2).text()
+                                uniqueId: $('td', $(this)).eq(0).text() + $('td', $(this)).eq(1).attr('data-time') + $('td', $(this)).eq(2).text()
                             })
                         });
                         callback(null, {
