@@ -92,13 +92,13 @@ let globalTimer = setInterval(function(){
         // 初始化lmlc里的立马金库数据
         lmlc.unshift({
             "productName": "立马金库",
-            "financeTotalAmount": 2147483647,
+            "financeTotalAmount": 100000000,
             "productId": "jsfund",
             "yearReturnRate": 4.0,
             "investementDays": 1,
-            "interestStartTime": (new Date(min)).format("yyyy-MM-dd hh:mm:ss"),
-            "interestEndTime": (new Date(max)).format("yyyy-MM-dd hh:mm:ss"),
-            "getDataTime": (new Date(min)).format("yyyy-MM-dd hh:mm:ss"),
+            "interestStartTime": (new Date(min)).format("yyyy年MM月dd日"),
+            "interestEndTime": (new Date(max)).format("yyyy年MM月dd日"),
+            "getDataTime": min,
             "alreadyBuyAmount": 0,
             "records": []
         });
@@ -193,8 +193,8 @@ function formatData(data){
         obj.productId = data[i].id;
         obj.yearReturnRate = data[i].yearReturnRate;
         obj.investementDays = data[i].investementDays;
-        obj.interestStartTime = (new Date(data[i].interestStartTime)).format("yyyy-MM-dd hh:mm:ss");
-        obj.interestEndTime = (new Date(data[i].interestEndTime)).format("yyyy-MM-dd hh:mm:ss");
+        obj.interestStartTime = (new Date(data[i].interestStartTime)).format("yyyy年MM月dd日");
+        obj.interestEndTime = (new Date(data[i].interestEndTime)).format("yyyy年MM月dd日");
         obj.getDataTime = +new Date();
         obj.alreadyBuyAmount = data[i].alreadyBuyAmount;
         obj.records = [];
@@ -272,13 +272,17 @@ function requestData() {
                         }
                         var $ = cheerio.load(pres.text);
                         var records = [];
-                        var $tr = $('.tabcontent table').find('tr').slice(1);
+                        var $table = $('.buy-records table');
+                        if(!$table.length){
+                            $table = $('.tabcontent table');
+                        }
+                        var $tr = $table.find('tr').slice(1);
                         $tr.each(function(){
                             records.push({
                                 username: $('td', $(this)).eq(0).text(),
                                 buyTime: parseInt($('td', $(this)).eq(1).attr('data-time').replace(/,/g, '')),
                                 buyAmount: parseFloat($('td', $(this)).eq(2).text().replace(/,/g, '')),
-                                uniqueId: $('td', $(this)).eq(0).text() + $('td', $(this)).eq(1).attr('data-time') + $('td', $(this)).eq(2).text()
+                                uniqueId: $('td', $(this)).eq(0).text() + $('td', $(this)).eq(1).attr('data-time').replace(/,/g, '') + $('td', $(this)).eq(2).text()
                             })
                         });
                         callback(null, {
