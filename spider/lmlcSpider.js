@@ -140,7 +140,7 @@ let globalTimer = setInterval(function(){
 
 // 理财list页面ajax爬取已经对应的产品详情页爬取，生成文件: data/prod.json
 let cookie;
-let delay = 30*1000;
+let delay = 16*1000;
 // 防止产品多产生分页需要多次请求获取数据，可以直接设置pageSize为100，这样多页几乎不会出现
 let ajaxUrl = 'https://www.lmlc.com/web/product/product_list?pageSize=100&pageNo=1&type=0';
 let phone = process.argv[2];
@@ -297,9 +297,12 @@ function requestData() {
                 let time = (new Date()).format("yyyy-MM-dd hh:mm:ss");
                 console.log(`所有产品详情页爬取完毕，时间：${time}`.info);
                 let oldRecord = JSON.parse(fs.readFileSync('data/prod.json', 'utf-8'));
+                let counts = [];
                 for(let i=0,len=result.length; i<len; i++){
                     for(let j=0,len2=oldRecord.length; j<len2; j++){
                         if(result[i].productId === oldRecord[j].productId){
+                            let count = 0;
+                            let newRecords = [];
                             for(let k=0,len3=result[i].records.length; k<len3; k++){
                                 let isNewRec = true;
                                 for(let m=0,len4=oldRecord[j].records.length; m<len4; m++){
@@ -308,11 +311,38 @@ function requestData() {
                                     }
                                 }
                                 if(isNewRec){
-                                    oldRecord[j].records.push(result[i].records[k]);
+                                    count++;
+                                    newRecords.push(result[i].records[k]);
                                 }
                             }
+                            oldRecord[j].records = oldRecord[j].records.concat(newRecords);
+                            counts.push(count);
                         }
                     }
+                }
+                let oldDelay = delay;
+                // 根据这次更新情况，来动态设置爬取频次
+                let maxNum = Math.max(...counts);
+                if(maxNum >=0 && maxNum <= 2){
+                    delay = delay + 4000;
+                }
+                if(maxNum >=8 && maxNum <= 10){
+                    delay = delay/2;
+                }
+                if(maxNum == 10){
+                    handleErr('部分数据可能丢失！');
+                }
+                if(delay <= 1000){
+                    delay = 1000;
+                }
+                if(delay >= 32*1000){
+                    delay = 32*1000;
+                }
+                if(oldDelay != delay){
+                    clearInterval(timer);
+                    timer = setInterval(function(){
+                        requestData();
+                    }, delay);
                 }
                 fs.writeFileSync('data/prod.json', JSON.stringify(oldRecord));
             })
