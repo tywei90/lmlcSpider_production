@@ -34,6 +34,7 @@
     "cross-env": "^1.0.6",
     "gulp": "^3.9.1",
     "gulp-connect": "^5.0.0",
+    "gulp-livereload": "^3.8.1",
     "gulp-less": "^3.3.2",
     "gulp-minify-css": "^1.2.4",
     "gulp-uglify": "^3.0.0",
