@@ -6,11 +6,11 @@ var livereload = require('gulp-livereload');
 var connect = require('gulp-connect');
 var minimist = require('minimist');
 
-
 var knownOptions = {
   string: 'env',
   default: { env: process.env.NODE_ENV || 'production' }
 };
+
 var options = minimist(process.argv.slice(2), knownOptions);
 
 // js文件压缩
@@ -56,14 +56,20 @@ gulp.task('connect', function() {
     });
 });
 
+// 监测文件的改动
 gulp.task('watch', function() {
     gulp.watch('src/css/*.less', ['compile-less']);
     gulp.watch('src/js/*.js', ['move-js']);
     gulp.watch('views/*.html', ['html']);
 });
 
+// 激活浏览器livereload友好提示
+gulp.task('tip', function() {
+    console.log('\n<----- 请用chrome浏览器打开 http://localhost:5000 页面，并激活livereload插件 ----->\n');
+});
+
 if (options.env === 'development') {
-    gulp.task('default', ['move-js', 'compile-less', 'connect', 'watch']);
+    gulp.task('default', ['move-js', 'compile-less', 'connect', 'watch', 'tip']);
 }else{
     gulp.task('default', ['minify-js', 'compile-minify-css']);
 }
