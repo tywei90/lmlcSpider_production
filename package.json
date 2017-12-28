@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "gulp --env development",
     "build": "gulp --env production",
-    "server": "nodemon --watch server server/lmlcServer",
+    "server": "pm2 start server/lmlcServer",
     "spider": "pm2 start spider/lmlcSpider.js -x -- ",
     "user": "nodemon --watch spider spider/user.js",
     "product": "nodemon --watch spider spider/product.js",
