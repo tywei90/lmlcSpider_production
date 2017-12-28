@@ -6,7 +6,7 @@ $(document).ready(function() {
         format: 'yyyy-mm-dd',
         yearFirst: true,
         autoPick: true,
-        startDate: '2017-12-21',
+        startDate: '2017-12-22',
         endDate: new Date(+new Date() - 24 * 60 * 60 * 1000)
     }
     $.fn.datepicker.setDefaults(options);
@@ -31,7 +31,24 @@ $(document).ready(function() {
     })
     showNowSells();
     function showNowSells(){
+        function getBoundary(arr, type){
+            var out;
+            if(type == 'min'){
+                var min = Math.min.apply(null, arr);
+                out = (parseInt(min/Math.pow(10, min.toString().length-2))) * Math.pow(10, min.toString().length-2);
+            }
+            if(type == 'max'){
+                var max = Math.max.apply(null, arr);
+                out = (parseInt(max/Math.pow(10, max.toString().length-2))+1) * Math.pow(10, max.toString().length-2);
+                if(out < 10000){
+                    out = 10000;
+                }
+            }
+            return out
+        }
         $.post("/ajax/getInitSales", function(res){
+            var span = res.data.span;
+            var total = res.data.total;
             ca.myChart1 = echarts.init(document.getElementById('nowSales'));
             var option = {
                 title: {
@@ -49,19 +66,6 @@ $(document).ready(function() {
                 },
                 legend: {
                     data:['最新售卖记录', '已售总金额']
-                },
-                // toolbox: {
-                //     show: true,
-                //     feature: {
-                //         dataView: {readOnly: false},
-                //         restore: {},
-                //         saveAsImage: {}
-                //     }
-                // },
-                dataZoom: {
-                    show: false,
-                    start: 0,
-                    end: 100
                 },
                 xAxis: [
                     {
@@ -84,16 +88,16 @@ $(document).ready(function() {
                         type: 'value',
                         scale: true,
                         name: '已售总金额',
-                        max: 50000000,
-                        min: 0,
+                        min: getBoundary(total, 'min'),
+                        max: getBoundary(total, 'max'),
                         boundaryGap: [0.2, 0.2]
                     },
                     {
                         type: 'value',
                         scale: true,
                         name: '前10秒售卖金额',
-                        max: 1000000,
-                        min: 0,
+                        min: getBoundary(span, 'min'),
+                        max: getBoundary(span, 'max'),
                         boundaryGap: [0.2, 0.2]
                     }
                 ],
@@ -103,14 +107,14 @@ $(document).ready(function() {
                         type:'bar',
                         xAxisIndex: 0,
                         yAxisIndex: 1,
-                        data: res.data.span
+                        data: span
                     },
                     {
                         name:'已售总金额',
                         type:'line',
                         xAxisIndex: 0,
                         yAxisIndex: 0,
-                        data: res.data.total
+                        data: total
                     }
                 ]
             };
@@ -118,7 +122,8 @@ $(document).ready(function() {
             var count = 11;
             setInterval(function (){
                 $.post("/ajax/getNowSales", function(res){
-                    var axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');
+                    var tmp = Date.parse((new Date()).toLocaleDateString() + ' ' + option.xAxis[0].data[9]) + 10*1000;
+                    var axisData = (new Date(tmp)).toLocaleTimeString().replace(/^\D*/,'');
                     var data0 = option.series[0].data;
                     var data1 = option.series[1].data;
                     data0.shift();
@@ -127,9 +132,13 @@ $(document).ready(function() {
                     data1.push(res.data.total);
                     option.xAxis[0].data.shift();
                     option.xAxis[0].data.push(axisData);
+                    option.yAxis[0].min = getBoundary(data1, 'min');
+                    option.yAxis[0].max = getBoundary(data1, 'max');
+                    option.yAxis[1].min = getBoundary(data0, 'min');
+                    option.yAxis[1].max = getBoundary(data0, 'max');
                     ca.myChart1.setOption(option);
                 })
-            }, 10*1000);
+            }, 10*990);
         })
     }
     
