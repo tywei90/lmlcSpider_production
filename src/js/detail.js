@@ -1,47 +1,30 @@
 $(document).ready(function() {
     var ca = {};
-    var options = {
-        autoHide: true,
-        language: 'zh-CN',
-        format: 'yyyy-mm-dd',
-        yearFirst: true,
-        autoPick: true,
-        startDate: '2017-12-15',
-        endDate: new Date(+new Date() - 24 * 60 * 60 * 1000)
+    var query = {};
+    var search = location.search.substring(1).split('&');
+    for(var i=0,len=search.length; i<len; i++){
+        query[search[i].split('=')[0]] = search[i].split('=')[1];
     }
-    $.fn.datepicker.setDefaults(options);
-    $('.datepicker').on('keydown', function(e) {
-        e.preventDefault();
-    })
-    $('.startTime').datepicker({
-        date: new Date(+new Date() - 10 * 24 * 60 * 60 * 1000),
-    });
-    $('.endTime').datepicker({
-        date: new Date(+new Date() - 24 * 60 * 60 * 1000),
-    });
-    $('.startTime').on('pick.datepicker', function(e) {
-        $('.endTime').datepicker('destroy');
-        $('.endTime').datepicker({
-            startDate: e.date
-        });
-        $('.endTime').datepicker('show');
-    });
-    $('.endTime').on('hide.datepicker', function(e) {
-        showPeriodSells();
-    })
-    showPeriodSells();
+    query._date = query.date.split('-')[0] + '年' + query.date.split('-')[1] + '月' + query.date.split('-')[2] + '日';
+    query._url = 'https://www.lmlc.com/web/product/product_detail.html?id=' + query.id;
+    query._name = decodeURIComponent(query.name);
+    $('#title').html(query._date + '立马理财' + '<a target="_blank" href=' + query._url + '>'+ query._name + '</a>产品的销售情况');
 
-    function showPeriodSells() {
-        $.post("/ajax/getPeriodSales", {
-            startTime: $('.startTime').datepicker('getDate', 'yyyy-mm-dd'),
-            endTime: $('.endTime').datepicker('getDate', 'yyyy-mm-dd')
-        }, function(data) {
+    showProdChart();
+    showProdTable();
+
+    function showProdChart() {
+        $.post("/ajax/getProdChart", {
+            date: query.date,
+            id: query.id
+        }, function(res) {
             ca.myChart && ca.myChart.clear();
-            ca.myChart = echarts.init(document.getElementById('periodSales'));
+            ca.myChart = echarts.init(document.getElementById('prodChart'));
             var option = {
                 title: {
-                    text: '总销售额'
+                    text: '已售金额(元)'
                 },
+                color: ['#3398DB'],
                 tooltip: {
                     trigger: 'axis'
                 },
@@ -51,15 +34,10 @@ $(document).ready(function() {
                     bottom: '3%',
                     containLabel: true
                 },
-                toolbox: {
-                    feature: {
-                        saveAsImage: {}
-                    }
-                },
                 xAxis: {
                     type: 'category',
                     boundaryGap: false,
-                    data: data.data.dates
+                    data: res.data.dates
                 },
                 yAxis: {
                     type: 'value'
@@ -67,11 +45,32 @@ $(document).ready(function() {
                 series: [{
                     name: '',
                     type: 'line',
-                    stack: '总量',
-                    data: data.data.sales
+                    stack: '已售金额',
+                    data: res.data.amounts
                 }]
             };
             ca.myChart.setOption(option);
+        });
+    }
+    function showProdTable() {
+        $.post("/ajax/getProdTable", {
+            date: query.date,
+            id: query.id
+        }, function(res) {
+            ca.prodTable && ca.prodTable.destroy();
+            var markup = ['<tr>',
+                '<td>${username}</td>',
+                '<td>${buyAmount}</td>',
+                '<td>${buyTime}</td>',
+                '</tr>'
+            ].join('');
+            $.template("prodTemplate", markup);
+            $('#prodTbody').html($.tmpl("prodTemplate", res.data.records));
+            ca.prodTable = $('#prodTable').DataTable({
+                "order": [
+                    [2, "asc"]
+                ]
+            });
         });
     }
 })
