@@ -49,8 +49,15 @@ $(document).ready(function() {
         return out
     }
     function showNowSells(){
+        var deltaStr = '';
         var delta = parseInt($('#selectDelta').val());
-        var deltaStr = delta >=60 ? (delta/60 + '分钟') : (delta + '秒');
+        if(delta >= 3600){
+            deltaStr = delta/3600 + '小时';
+        }else if(delta >= 60){
+            deltaStr = delta/60 + '分钟';
+        }else{
+            deltaStr = delta + '秒';
+        }
         $.post("/ajax/getInitSales", {
             delta: delta
         }, function(res){
