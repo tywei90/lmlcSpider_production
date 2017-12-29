@@ -25,12 +25,14 @@ Date.prototype.format = function(format) {
 }
 
 router.post('/getInitSales', function(req, res, next) {
+    let delta = req.body.delta;
+    console.log(delta);
     let prod = JSON.parse(fs.readFileSync('data/prod.json', 'utf-8'));
     let user = JSON.parse(fs.readFileSync('data/user.json', 'utf-8'));
     let total = [];
     for(let i=0; i<11; i++){
         total[i] = 0;
-        let time = +new Date() - (10-i)*6000;
+        let time = +new Date() - (10-i)*delta*1000;
         for(let j=0, len=prod.length; j<len; j++){
             for(let k=0, len2=prod[j].records.length; k<len; k++){
                 if(prod[j].records[k].buyTime <= time){
@@ -184,32 +186,30 @@ router.post('/getProdChart', function(req, res, next) {
             break
         }
     }
-    let rlen = prod.records.length;
-    let span = Math.ceil((prod.records[rlen-1].buyTime - prod.getDataTime)/1000/60/10);
     let init = prod.getDataTime;
-    for(let i=0, len=11; i<len; i++){
-        dateArr.push((new Date(init + span*i*60*1000)).format("hh:mm"));
+    let rlen = prod.records.length;
+    if((prod.records[rlen-1].buyTime - prod.records[0].buyTime) < 0.5*(prod.records[0].buyTime - prod.getDataTime)){
+        init = prod.records[0].buyTime - 10*1000;
     }
-    for(let i=0; i<rlen; i++){
-        let buyTime = prod.records[i].buyTime;
-        let buyAmount = prod.records[i].buyAmount;
-        for(let j=0, len2=10; j<len2; j++){
-            amountArr[j] = amountArr[j]||0;
-            if((buyTime >= init + j*span*60*1000) && (buyTime < init + (j+1)*span*60*1000)){
-                amountArr[j] = amountArr[j] + buyAmount;
+    let span = Math.ceil((prod.records[rlen-1].buyTime - init)/1000/10);
+    for(let i=0, len=11; i<len; i++){
+        dateArr.push((new Date(init + span*i*1000)).format("hh:mm:ss"));
+    }
+    for(let i=0, len=11; i<len; i++){
+        amountArr[i] = amountArr[i]||prod.alreadyBuyAmount;
+        for(let j=0; j<rlen; j++){
+            let buyTime = prod.records[j].buyTime;
+            let buyAmount = prod.records[j].buyAmount;
+            if(buyTime <= init + i*span*1000){
+                amountArr[i] = amountArr[i] + buyAmount;
             }
         }
     }
-    let amountArr2 = [parseInt(prod.alreadyBuyAmount)];
     for(let i=0, len=amountArr.length; i<len; i++){
-        let total = amountArr2[0];
-        for(let j=0; j<=i; j++){
-            total += amountArr[j];
-        }
-        amountArr2.push(parseInt(total));
+        amountArr[i] = parseInt(amountArr[i]);
     }
     res.json({
-        data: {dates: dateArr, amounts:amountArr2},
+        data: {dates: dateArr, amounts:amountArr},
         retcode: 200,
         retdesc: '请求成功'
     });

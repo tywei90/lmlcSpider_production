@@ -17,6 +17,16 @@
 		<h1>立马理财销售额统计</h1>
 		<section class="period-sales">
 			<h2>1、当日实时销售情况</h2>
+			<div>
+				<label for="">选择自动刷新频率/秒</label>
+				<select id="selectDelta" class="form-control input-sm">
+					<option value="5">5</option>
+					<option value="30">30</option>
+					<option value="60" selected>60</option>
+					<option value="120">120</option>
+					<option value="180">180</option>
+				</select>
+			</div>
 			<div id="nowSales" style="width: 1100px;height:500px;"></div>
 		</section>
 		<section class="period-sales">

@@ -30,30 +30,39 @@ $(document).ready(function() {
         showPeriodSells();
     })
     showNowSells();
-    function showNowSells(){
-        function getBoundary(arr, type){
-            var out;
-            if(type == 'min'){
-                var min = Math.min.apply(null, arr);
-                out = (parseInt(min/Math.pow(10, min.toString().length-2))) * Math.pow(10, min.toString().length-2);
-            }
-            if(type == 'max'){
-                var max = Math.max.apply(null, arr);
-                out = (parseInt(max/Math.pow(10, max.toString().length-2))+1) * Math.pow(10, max.toString().length-2);
-                if(out < 10000){
-                    out = 10000;
-                }
-            }
-            return out
+    $('#selectDelta').change(function(event) {
+        showNowSells();
+    });
+    function getBoundary(arr, type){
+        var out;
+        if(type == 'min'){
+            var min = Math.min.apply(null, arr);
+            out = (parseInt(min/Math.pow(10, min.toString().length-2))) * Math.pow(10, min.toString().length-2);
         }
-        $.post("/ajax/getInitSales", function(res){
+        if(type == 'max'){
+            var max = Math.max.apply(null, arr);
+            out = (parseInt(max/Math.pow(10, max.toString().length-2))+1) * Math.pow(10, max.toString().length-2);
+            if(out < 10000){
+                out = 10000;
+            }
+        }
+        return out
+    }
+    function showNowSells(){
+        var delta = parseInt($('#selectDelta').val());
+        var deltaStr = delta >=60 ? (delta/60 + '分钟') : (delta + '秒');
+        $.post("/ajax/getInitSales", {
+            delta: delta
+        }, function(res){
             var span = res.data.span;
             var total = res.data.total;
+            ca.myChart1 && ca.myChart1.clear();
+            ca.timer && clearInterval(ca.timer);
             ca.myChart1 = echarts.init(document.getElementById('nowSales'));
             var option = {
                 title: {
                     text: '实时数据',
-                    subtext: '10秒刷新'
+                    subtext: `约${deltaStr}刷新`
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -76,8 +85,8 @@ $(document).ready(function() {
                             var res = [];
                             var len = 10;
                             while (len--) {
-                                res.unshift(now.toLocaleTimeString().replace(/^\D*/,''));
-                                now = new Date(now - 10*1000);
+                                res.unshift(now.toTimeString().split(" ")[0]);
+                                now = new Date(now - delta*1000);
                             }
                             return res;
                         })()
@@ -95,7 +104,7 @@ $(document).ready(function() {
                     {
                         type: 'value',
                         scale: true,
-                        name: '前10秒售卖金额',
+                        name: `前${deltaStr}售卖金额`,
                         min: getBoundary(span, 'min'),
                         max: getBoundary(span, 'max'),
                         boundaryGap: [0.2, 0.2]
@@ -103,7 +112,7 @@ $(document).ready(function() {
                 ],
                 series: [
                     {
-                        name:'前10秒售卖金额',
+                        name: `前${deltaStr}售卖金额`,
                         type:'bar',
                         xAxisIndex: 0,
                         yAxisIndex: 1,
@@ -119,11 +128,9 @@ $(document).ready(function() {
                 ]
             };
             ca.myChart1.setOption(option);
-            var count = 11;
-            setInterval(function (){
+            function getNowSales(){
                 $.post("/ajax/getNowSales", function(res){
-                    var tmp = Date.parse((new Date()).toLocaleDateString() + ' ' + option.xAxis[0].data[9]) + 10*1000;
-                    var axisData = (new Date(tmp)).toLocaleTimeString().replace(/^\D*/,'');
+                    var axisData = (new Date()).toTimeString().split(" ")[0];
                     var data0 = option.series[0].data;
                     var data1 = option.series[1].data;
                     data0.shift();
@@ -138,7 +145,10 @@ $(document).ready(function() {
                     option.yAxis[1].max = getBoundary(data0, 'max');
                     ca.myChart1.setOption(option);
                 })
-            }, 10*990);
+            }
+            ca.timer = setInterval(function (){
+                getNowSales();
+            }, delta*1000);
         })
     }
     

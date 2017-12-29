@@ -18,6 +18,7 @@ $(document).ready(function() {
             date: query.date,
             id: query.id
         }, function(res) {
+            console.log(res.data);
             ca.myChart && ca.myChart.clear();
             ca.myChart = echarts.init(document.getElementById('prodChart'));
             var option = {
