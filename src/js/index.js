@@ -33,15 +33,15 @@ $(document).ready(function() {
     $('#selectDelta').change(function(event) {
         showNowSells();
     });
-    function getBoundary(arr, type){
+    function getBoundary(arr, type, degree){
         var out;
         if(type == 'min'){
             var min = Math.min.apply(null, arr);
-            out = (parseInt(min/Math.pow(10, min.toString().length-2))) * Math.pow(10, min.toString().length-2);
+            out = (parseInt(min/Math.pow(10, min.toString().length-degree))) * Math.pow(10, min.toString().length-degree);
         }
         if(type == 'max'){
             var max = Math.max.apply(null, arr);
-            out = (parseInt(max/Math.pow(10, max.toString().length-2))+1) * Math.pow(10, max.toString().length-2);
+            out = (parseInt(max/Math.pow(10, max.toString().length-degree))+1) * Math.pow(10, max.toString().length-degree);
             if(out < 10000){
                 out = 10000;
             }
@@ -97,16 +97,16 @@ $(document).ready(function() {
                         type: 'value',
                         scale: true,
                         name: '已售总金额',
-                        min: getBoundary(total, 'min'),
-                        max: getBoundary(total, 'max'),
+                        min: getBoundary(total, 'min', 3),
+                        max: getBoundary(total, 'max', 3),
                         boundaryGap: [0.2, 0.2]
                     },
                     {
                         type: 'value',
                         scale: true,
                         name: `前${deltaStr}售卖金额`,
-                        min: getBoundary(span, 'min'),
-                        max: getBoundary(span, 'max'),
+                        min: getBoundary(span, 'min', 2),
+                        max: getBoundary(span, 'max', 2),
                         boundaryGap: [0.2, 0.2]
                     }
                 ],
@@ -139,10 +139,10 @@ $(document).ready(function() {
                     data1.push(res.data.total);
                     option.xAxis[0].data.shift();
                     option.xAxis[0].data.push(axisData);
-                    option.yAxis[0].min = getBoundary(data1, 'min');
-                    option.yAxis[0].max = getBoundary(data1, 'max');
-                    option.yAxis[1].min = getBoundary(data0, 'min');
-                    option.yAxis[1].max = getBoundary(data0, 'max');
+                    option.yAxis[0].min = getBoundary(data1, 'min', 3);
+                    option.yAxis[0].max = getBoundary(data1, 'max', 3);
+                    option.yAxis[1].min = getBoundary(data0, 'min', 2);
+                    option.yAxis[1].max = getBoundary(data0, 'max', 2);
                     ca.myChart1.setOption(option);
                 })
             }
