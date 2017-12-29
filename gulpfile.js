@@ -5,6 +5,7 @@ var minifyCss = require("gulp-minify-css");
 var livereload = require('gulp-livereload');
 var connect = require('gulp-connect');
 var minimist = require('minimist');
+var babel = require('gulp-babel');
 
 var knownOptions = {
   string: 'env',
@@ -16,6 +17,9 @@ var options = minimist(process.argv.slice(2), knownOptions);
 // js文件压缩
 gulp.task('minify-js', function() {
     gulp.src('src/js/*.js')
+        .pipe(babel({
+          presets: ['es2015']
+        }))
         .pipe(uglify())
         .pipe(gulp.dest('dist/'));
 });
@@ -23,6 +27,9 @@ gulp.task('minify-js', function() {
 // js移动文件
 gulp.task('move-js', function() {
     gulp.src('src/js/*.js')
+        .pipe(babel({
+          presets: ['es2015']
+        }))
         .pipe(gulp.dest('dist/'))
         .pipe(connect.reload());
 });
