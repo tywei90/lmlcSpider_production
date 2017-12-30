@@ -92,7 +92,13 @@ $(document).ready(function() {
                             var res = [];
                             var len = 10;
                             while (len--) {
-                                res.unshift(now.toTimeString().split(" ")[0]);
+                                let str = '';
+                                if(now.toLocaleDateString() == (new Date()).toLocaleDateString()){
+                                    str = now.toTimeString().split(" ")[0];
+                                }else{
+                                    str = '昨' + now.toTimeString().split(" ")[0];
+                                }
+                                res.unshift(str);
                                 now = new Date(now - delta*1000);
                             }
                             return res;
@@ -213,7 +219,7 @@ $(document).ready(function() {
         }, function(res) {
             ca.onedayTable && ca.onedayTable.destroy();
             var markup = ['<tr>',
-                '<td><a target="_blank" href="/detail?date=' + date + '&id=${productId}&name=${encodeURIComponent(productName)}">${productName}</a></td>',
+                '<td><a target="_blank" class="prod-name" href="/detail?date=' + date + '&id=${productId}&name=${encodeURIComponent(productName)}">${productName}</a></td>',
                 '<td>${(sellAmount/10000).toFixed(0)}</td>',
                 '<td>${(financeTotalAmount/10000).toFixed(0)}</td>',
                 '<td>${yearReturnRate}</td>',
