@@ -146,6 +146,18 @@ $(document).ready(function() {
                     var axisData = (new Date()).toTimeString().split(" ")[0];
                     var data0 = option.series[0].data;
                     var data1 = option.series[1].data;
+                    // 页面停留过0点之后
+                    if(axisData.split(':')[0] < option.xAxis[0].data.pop().split(':')[0]){
+                        data0.forEach(function(val,i){
+                            data0[i] = 0;
+                        })
+                        data1.forEach(function(val,i){
+                            data1[i] = 0;
+                        })
+                        option.xAxis[0].data.forEach(function(val,i){
+                            option.xAxis[0].data[i] = '昨' + option.xAxis[0].data[i];
+                        })
+                    }
                     data0.shift();
                     data0.push(res.data.total - data1[9]);
                     data1.shift();
