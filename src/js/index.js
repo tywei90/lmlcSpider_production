@@ -147,7 +147,7 @@ $(document).ready(function() {
                     var data0 = option.series[0].data;
                     var data1 = option.series[1].data;
                     // 页面停留过0点之后
-                    if(axisData.split(':')[0] < option.xAxis[0].data.pop().split(':')[0]){
+                    if(axisData.split(':')[0] < option.xAxis[0].data[9].split(':')[0]){
                         data0.forEach(function(val,i){
                             data0[i] = 0;
                         })
