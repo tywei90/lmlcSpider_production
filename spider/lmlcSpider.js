@@ -338,6 +338,7 @@ function requestData() {
                 if(delay >= 32*1000){
                     delay = 32*1000;
                 }
+                console.log(delay);
                 if(oldDelay != delay){
                     clearInterval(timer);
                     timer = setInterval(function(){
