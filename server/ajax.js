@@ -67,7 +67,7 @@ router.post('/getNowSales', function(req, res, next) {
     let total = 0;
     let time = +new Date();
     for(let j=0, len=prod.length; j<len; j++){
-        for(let k=0, len2=prod[j].records.length; k<len; k++){
+        for(let k=0, len2=prod[j].records.length; k<len2; k++){
             total += prod[j].records[k].buyAmount;
         }
     }
