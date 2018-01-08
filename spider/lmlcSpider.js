@@ -140,6 +140,7 @@ let globalTimer = setInterval(function(){
 
 // 理财list页面ajax爬取已经对应的产品详情页爬取，生成文件: data/prod.json
 let cookie;
+let cache = {};
 let delay = 16*1000;
 // 预售产品
 let preIds = [];
@@ -238,11 +239,12 @@ function requestData() {
         }
         console.log(preIds);
         function setPreId(time, id){
-            setInterval(function(){
+            cache[id] = setInterval(function(){
                 if(time - (+new Date()) < 1000){
                     // 预售产品开始抢购，直接修改爬取频次为1s，防止丢失数据
-                    delay = 1000;
+                    clearInterval(cache[id]);
                     clearInterval(timer);
+                    delay = 1000;
                     timer = setInterval(function(){
                         requestData();
                     }, delay);
