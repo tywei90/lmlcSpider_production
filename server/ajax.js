@@ -34,7 +34,7 @@ router.post('/getInitSales', function(req, res, next) {
         total[i] = 0;
         let time = +new Date() - (10-i)*delta*1000;
         for(let j=0, len=prod.length; j<len; j++){
-            for(let k=0, len2=prod[j].records.length; k<len; k++){
+            for(let k=0, len2=prod[j].records.length; k<len2; k++){
                 if(prod[j].records[k].buyTime <= time){
                     total[i] += prod[j].records[k].buyAmount;
                 }
