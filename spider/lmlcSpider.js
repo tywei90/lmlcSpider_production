@@ -141,6 +141,8 @@ let globalTimer = setInterval(function(){
 // 理财list页面ajax爬取已经对应的产品详情页爬取，生成文件: data/prod.json
 let cookie;
 let delay = 16*1000;
+// 预售产品
+let preIds = [];
 // 防止产品多产生分页需要多次请求获取数据，可以直接设置pageSize为100，这样多页几乎不会出现
 let ajaxUrl = 'https://www.lmlc.com/web/product/product_list?pageSize=100&pageNo=1&type=0';
 let phone = process.argv[2];
@@ -211,22 +213,46 @@ function requestData() {
             handleErr(err.message);
             return;
         }
-        let addData = JSON.parse(pres.text).data;
-        let pageUrls = [];
-        if(addData.totalPage > 1){
-            handleErr('产品个数超过100个！');
-            return;
-        }
-        let formatedAddData = formatData(addData.result);
-        for(let i=0,len=formatedAddData.length; i<len; i++){
-            pageUrls.push('https://www.lmlc.com/web/product/product_detail.html?id=' + formatedAddData[i].productId);
-        }
-        // 处理售卖金额信息
         // 在这里清空数据，避免一个文件被同时写入
         if(clearProd){
             fs.writeFileSync('data/prod.json', JSON.stringify([]));
             clearProd = false;
         }
+        console.log(delay);
+        let addData = JSON.parse(pres.text).data;
+        let formatedAddData = formatData(addData.result);
+        let pageUrls = [];
+        if(addData.totalPage > 1){
+            handleErr('产品个数超过100个！');
+            return;
+        }
+        for(let i=0,len=addData.result.length; i<len; i++){
+            if(+new Date() < addData.result[i].buyStartTime){
+                if(preIds.indexOf(addData.result[i].id) == -1){
+                    preIds.push(addData.result[i].id);
+                    setPreId(addData.result[i].buyStartTime, addData.result[i].id);
+                }
+            }else{
+                pageUrls.push('https://www.lmlc.com/web/product/product_detail.html?id=' + addData.result[i].id);
+            }
+        }
+        console.log(preIds);
+        function setPreId(time, id){
+            setInterval(function(){
+                if(time - (+new Date()) < 1000){
+                    // 预售产品开始抢购，直接修改爬取频次为1s，防止丢失数据
+                    delay = 1000;
+                    clearInterval(timer);
+                    timer = setInterval(function(){
+                        requestData();
+                    }, delay);
+                    // 同时删除id记录
+                    let index = preIds.indexOf(id);
+                    sort.delArrByIndex(preIds, [index]);
+                }
+            }, 1000)
+        }
+        // 处理售卖金额信息
         let oldData = JSON.parse(fs.readFileSync('data/prod.json', 'utf-8'));
         for(let i=0, len=formatedAddData.length; i<len; i++){
             let isNewProduct = true;
@@ -242,6 +268,14 @@ function requestData() {
         fs.writeFileSync('data/prod.json', JSON.stringify(oldData));
         let time = (new Date()).format("yyyy-MM-dd hh:mm:ss");
         console.log((`理财列表ajax接口爬取完毕，时间：${time}`).warn);
+        if(!pageUrls.length){
+            delay = 32*1000;
+            clearInterval(timer);
+            timer = setInterval(function(){
+                requestData();
+            }, delay);
+            return
+        }
         // 请求用户信息接口，来判断登录是否还有效，在产品详情页判断麻烦还要造成五次登录请求
         superagent
             .post('https://www.lmlc.com/s/web/m/user_info')
@@ -324,7 +358,7 @@ function requestData() {
                 // 根据这次更新情况，来动态设置爬取频次
                 let maxNum = Math.max(...counts);
                 if(maxNum >=0 && maxNum <= 2){
-                    delay = delay + 4000;
+                    delay = delay + 2000;
                 }
                 if(maxNum >=8 && maxNum <= 10){
                     delay = delay/2;
@@ -338,7 +372,6 @@ function requestData() {
                 if(delay >= 32*1000){
                     delay = 32*1000;
                 }
-                console.log(delay);
                 if(oldDelay != delay){
                     clearInterval(timer);
                     timer = setInterval(function(){
