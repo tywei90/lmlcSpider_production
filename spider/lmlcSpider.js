@@ -219,7 +219,7 @@ function requestData() {
             fs.writeFileSync('data/prod.json', JSON.stringify([]));
             clearProd = false;
         }
-        console.log(delay);
+        console.log(`当前的爬取频次为${delay/1000}秒`);
         let addData = JSON.parse(pres.text).data;
         let formatedAddData = formatData(addData.result);
         let pageUrls = [];
@@ -237,7 +237,6 @@ function requestData() {
                 pageUrls.push('https://www.lmlc.com/web/product/product_detail.html?id=' + addData.result[i].id);
             }
         }
-        console.log(preIds);
         function setPreId(time, id){
             cache[id] = setInterval(function(){
                 if(time - (+new Date()) < 1000){
@@ -360,7 +359,7 @@ function requestData() {
                 // 根据这次更新情况，来动态设置爬取频次
                 let maxNum = Math.max(...counts);
                 if(maxNum >=0 && maxNum <= 2){
-                    delay = delay + 2000;
+                    delay = delay + 1000;
                 }
                 if(maxNum >=8 && maxNum <= 10){
                     delay = delay/2;

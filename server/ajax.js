@@ -26,7 +26,6 @@ Date.prototype.format = function(format) {
 
 router.post('/getInitSales', function(req, res, next) {
     let delta = req.body.delta;
-    console.log(delta);
     let prod = JSON.parse(fs.readFileSync('data/prod.json', 'utf-8'));
     let user = JSON.parse(fs.readFileSync('data/user.json', 'utf-8'));
     let total = [];
