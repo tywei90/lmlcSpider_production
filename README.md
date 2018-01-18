@@ -27,7 +27,10 @@ views存放html模板
 ## 二、项目运行
 1. 下载chrome插件[LiveReload](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei)
 
-2. 修改views文件夹里的index.html和detail.html文件。如果是本地调试，index.js都要改成`http://localhost:8080/dist/index.js`；如果是其他设备访问，则改成`your_ip_addr:5000/dist/index.js`，index.css一样。 
+2. 修改views文件夹里的index.html和detail.html文件。
+* 如果是本地调试，index.js都要改成`http://localhost:8080/dist/index.js`  
+* 如果是其他设备访问，则改成`your_ip_addr:5000/dist/index.js`
+* index.css一样。 
 
 3. 运行方式
 ```
