@@ -159,7 +159,7 @@ if(!fs.existsSync('data/prod.json') || !fs.readFileSync('data/prod.json', 'utf-8
 }
 
 getCookie();
-emitter.on("setCookeie", requestData) //监听getCookie事件
+emitter.on("setCookie", requestData) //监听getCookie事件
 
 
 function getCookie() {
@@ -177,7 +177,7 @@ function getCookie() {
                 return;
             }
             cookie = res.header['set-cookie']; //从response中得到cookie
-            emitter.emit("setCookeie");
+            emitter.emit("setCookie");
         })
 }
 
@@ -277,111 +277,122 @@ function requestData() {
             }, delay);
             return
         }
-        // 请求用户信息接口，来判断登录是否还有效，在产品详情页判断麻烦还要造成五次登录请求
-        superagent
-            .post('https://www.lmlc.com/s/web/m/user_info')
-            .set('Cookie', cookie)
-            .end(function(err,pres){
-            // 常规的错误处理
-            if (err) {
-                handleErr(err.message);
-                return;
-            }
-            let retcode = JSON.parse(pres.text).retcode;
-            if(retcode === 410){
-                handleErr('登陆cookie已失效，尝试重新登陆...');
-                getCookie();
-                return;
-            }
-            var reptileLink = function(url,callback){
-                // 如果爬取页面有限制爬取次数，这里可设置延迟
-                console.log( '正在爬取产品详情页面：' + url);
-                superagent
-                    .get(url)
-                    .set('Cookie', cookie)
-                    .end(function(err,pres){
-                        // 常规的错误处理
-                        if (err) {
-                            handleErr(err.message);
-                            return;
-                        }
-                        var $ = cheerio.load(pres.text);
-                        var records = [];
-                        var $table = $('.buy-records table');
-                        if(!$table.length){
-                            $table = $('.tabcontent table');
-                        }
-                        var $tr = $table.find('tr').slice(1);
-                        $tr.each(function(){
-                            records.push({
-                                username: $('td', $(this)).eq(0).text(),
-                                buyTime: parseInt($('td', $(this)).eq(1).attr('data-time').replace(/,/g, '')),
-                                buyAmount: parseFloat($('td', $(this)).eq(2).text().replace(/,/g, '')),
-                                uniqueId: $('td', $(this)).eq(0).text() + $('td', $(this)).eq(1).attr('data-time').replace(/,/g, '') + $('td', $(this)).eq(2).text()
-                            })
+        getDetailData();
+        function getDetailData(){
+            // 请求用户信息接口，来判断登录是否还有效，在产品详情页判断麻烦还要造成五次登录请求
+            superagent
+                .post('https://www.lmlc.com/s/web/m/user_info')
+                .set('Cookie', cookie)
+                .end(function(err,pres){
+                // 常规的错误处理
+                if (err) {
+                    handleErr(err.message);
+                    return;
+                }
+                let retcode = JSON.parse(pres.text).retcode;
+                if(retcode === 410){
+                    handleErr('登陆cookie已失效，尝试重新登陆...');
+                    getCookie();
+                    return;
+                }
+                var reptileLink = function(url,callback){
+                    // 如果爬取页面有限制爬取次数，这里可设置延迟
+                    console.log( '正在爬取产品详情页面：' + url);
+                    superagent
+                        .get(url)
+                        .set('Cookie', cookie)
+                        .end(function(err,pres){
+                            // 常规的错误处理
+                            if (err) {
+                                handleErr(err.message);
+                                return;
+                            }
+                            var $ = cheerio.load(pres.text);
+                            var records = [];
+                            var $table = $('.buy-records table');
+                            if(!$table.length){
+                                $table = $('.tabcontent table');
+                            }
+                            var $tr = $table.find('tr').slice(1);
+                            $tr.each(function(){
+                                records.push({
+                                    username: $('td', $(this)).eq(0).text(),
+                                    buyTime: parseInt($('td', $(this)).eq(1).attr('data-time').replace(/,/g, '')),
+                                    buyAmount: parseFloat($('td', $(this)).eq(2).text().replace(/,/g, '')),
+                                    uniqueId: $('td', $(this)).eq(0).text() + $('td', $(this)).eq(1).attr('data-time').replace(/,/g, '') + $('td', $(this)).eq(2).text()
+                                })
+                            });
+                            callback(null, {
+                                productId: url.split('?id=')[1],
+                                records: records
+                            });
                         });
-                        callback(null, {
-                            productId: url.split('?id=')[1],
-                            records: records
-                        });
-                    });
-            };
-            async.mapLimit(pageUrls, 10 ,function (url, callback) {
-              reptileLink(url, callback);
-            }, function (err,result) {
-                let time = (new Date()).format("yyyy-MM-dd hh:mm:ss");
-                console.log(`所有产品详情页爬取完毕，时间：${time}`.info);
-                let oldRecord = JSON.parse(fs.readFileSync('data/prod.json', 'utf-8'));
-                let counts = [];
-                for(let i=0,len=result.length; i<len; i++){
-                    for(let j=0,len2=oldRecord.length; j<len2; j++){
-                        if(result[i].productId === oldRecord[j].productId){
-                            let count = 0;
-                            let newRecords = [];
-                            for(let k=0,len3=result[i].records.length; k<len3; k++){
-                                let isNewRec = true;
-                                for(let m=0,len4=oldRecord[j].records.length; m<len4; m++){
-                                    if(result[i].records[k].uniqueId === oldRecord[j].records[m].uniqueId){
-                                        isNewRec = false;
+                };
+                async.mapLimit(pageUrls, 10 ,function (url, callback) {
+                  reptileLink(url, callback);
+                }, function (err,result) {
+                    let time = (new Date()).format("yyyy-MM-dd hh:mm:ss");
+                    console.log(`所有产品详情页爬取完毕，时间：${time}`.info);
+                    let oldRecord = JSON.parse(fs.readFileSync('data/prod.json', 'utf-8'));
+                    let counts = [];
+                    for(let i=0,len=result.length; i<len; i++){
+                        for(let j=0,len2=oldRecord.length; j<len2; j++){
+                            if(result[i].productId === oldRecord[j].productId){
+                                let count = 0;
+                                let newRecords = [];
+                                for(let k=0,len3=result[i].records.length; k<len3; k++){
+                                    let isNewRec = true;
+                                    for(let m=0,len4=oldRecord[j].records.length; m<len4; m++){
+                                        if(result[i].records[k].uniqueId === oldRecord[j].records[m].uniqueId){
+                                            isNewRec = false;
+                                        }
+                                    }
+                                    if(isNewRec){
+                                        count++;
+                                        newRecords.push(result[i].records[k]);
                                     }
                                 }
-                                if(isNewRec){
-                                    count++;
-                                    newRecords.push(result[i].records[k]);
-                                }
+                                oldRecord[j].records = oldRecord[j].records.concat(newRecords);
+                                counts.push(count);
                             }
-                            oldRecord[j].records = oldRecord[j].records.concat(newRecords);
-                            counts.push(count);
                         }
                     }
-                }
-                let oldDelay = delay;
-                // 根据这次更新情况，来动态设置爬取频次
-                let maxNum = Math.max(...counts);
-                if(maxNum >=0 && maxNum <= 2){
-                    delay = delay + 1000;
-                }
-                if(maxNum >=8 && maxNum <= 10){
-                    delay = delay/2;
-                }
-                if(maxNum == 10){
-                    handleErr('部分数据可能丢失！');
-                }
-                if(delay <= 1000){
-                    delay = 1000;
-                }
-                if(delay >= 32*1000){
-                    delay = 32*1000;
-                }
-                if(oldDelay != delay){
-                    clearInterval(timer);
-                    timer = setInterval(function(){
-                        requestData();
-                    }, delay);
-                }
-                fs.writeFileSync('data/prod.json', JSON.stringify(oldRecord));
-            })
-        });
+                    let oldDelay = delay;
+                    delay = getNewDelay(delay, counts);
+                    function getNewDelay(delay, counts){
+                        let nowDate = (new Date()).toLocaleDateString();
+                        let time1 = Date.parse(nowDate + ' 00:00:00');
+                        let time2 = +new Date();
+                        // 根据这次更新情况，来动态设置爬取频次
+                        let maxNum = Math.max(...counts);
+                        if(maxNum >=0 && maxNum <= 2){
+                            delay = delay + 1000;
+                        }
+                        if(maxNum >=8 && maxNum <= 10){
+                            delay = delay/2;
+                        }
+                        // 每天0点，prod数据清空，排除这个情况
+                        if(maxNum == 10 && (time2 - time1 >= 60*1000)){
+                            handleErr('部分数据可能丢失！');
+                        }
+                        if(delay <= 1000){
+                            delay = 1000;
+                        }
+                        if(delay >= 32*1000){
+                            delay = 32*1000;
+                        }
+                        return delay
+                    }
+                    if(oldDelay != delay){
+                        clearInterval(timer);
+                        timer = setInterval(function(){
+                            requestData();
+                        }, delay);
+                    }
+                    fs.writeFileSync('data/prod.json', JSON.stringify(oldRecord));
+                })
+            });
+        }
     });
 }
 
