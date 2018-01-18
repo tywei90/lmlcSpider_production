@@ -1,6 +1,6 @@
 # 基于 nodejs 的立马理财爬虫项目
 
-技术分析，详见我的[博客](https://www.wty90.com/2018/01/17/lmlc-spider/)
+> 技术分析，详见我的[博客](https://www.wty90.com/2018/01/17/lmlc-spider/)
 
 ## 一、工程目录分析
 
@@ -25,18 +25,18 @@ src前端工程目录
 views存放html模板
 
 ## 二、项目运行
-0. 下载chrome插件[LiveReload](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei)
+1. 下载chrome插件[LiveReload](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei)
 
-1. 修改views文件夹里的index.html和detail.html文件。如果是本地调试，index.js都要改成http://localhost:8080/dist/index.js；如果是其他设备访问，则改成your_ip_addr:5000/dist/index.js，index.css一样。 
+2. 修改views文件夹里的index.html和detail.html文件。如果是本地调试，index.js都要改成`http://localhost:8080/dist/index.js`；如果是其他设备访问，则改成`your_ip_addr:5000/dist/index.js`，index.css一样。 
 
-2. 运行方式
+3. 运行方式
 ```
 npm run dev
 npm run server // 需要带登录的账号和密码参数
 npm run spider // 爬虫代码
 ```
 
-3. 测试学习各页面的爬虫代码
+4. 测试学习各页面的爬虫代码
 ```
 npm run user  // 爬取立马理财首页的用户购买信息ajax接口
 npm run product  // 爬取立马理财理财页所有产品的ajax接口
