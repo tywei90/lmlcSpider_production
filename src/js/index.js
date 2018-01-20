@@ -17,7 +17,8 @@ $(document).ready(function() {
         date: new Date(+new Date() - 10 * 24 * 60 * 60 * 1000)
     });
     $('.endTime').datepicker({
-        date: new Date(+new Date() - 24 * 60 * 60 * 1000)
+        date: new Date(+new Date() - 24 * 60 * 60 * 1000),
+        startDate: new Date(+new Date() - 10 * 24 * 60 * 60 * 1000)
     });
     $('.startTime').on('pick.datepicker', function(e) {
         $('.endTime').datepicker('destroy');
