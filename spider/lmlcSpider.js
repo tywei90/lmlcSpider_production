@@ -4,7 +4,8 @@ let superagent = require('superagent-charset'),
     emitter = new events.EventEmitter(),
     cheerio = require("cheerio"),
     async = require("async"),
-    sort = require('../public/sortArr.js');
+    arrDel = require('arr-del'),
+    arrSort = require('arr-sort'),
     colors = require('colors');
 
 // node后台log颜色设置
@@ -78,7 +79,7 @@ let globalTimer = setInterval(function(){
                     delArr1.push(j);
                 }
             }
-            sort.delArrByIndex(lmlc[i].records, delArr1);
+            lmlc[i].records = arrDel(lmlc[i].records, delArr1);
         }
         // 删掉prod.records为空的数据
         let delArr2 = [];
@@ -87,7 +88,7 @@ let globalTimer = setInterval(function(){
                 delArr2.push(i);
             }
         }
-        sort.delArrByIndex(lmlc, delArr2);
+        lmlc = arrDel(lmlc, delArr2);
 
         // 初始化lmlc里的立马金库数据
         lmlc.unshift({
@@ -113,9 +114,9 @@ let globalTimer = setInterval(function(){
             }
         }
         // 删除无用属性，按照时间排序
-        lmlc[0].records.sort(function(a,b){return a.buyTime - b.buyTime});
+        lmlc[0].records = arrSort(lmlc[0].records, [{attr: 'buyTime', asc: true}]);
         for(let i=1, len=lmlc.length; i<len; i++){
-            lmlc[i].records.sort(function(a,b){return a.buyTime - b.buyTime});
+            lmlc[i].records = arrSort(lmlc[i].records, [{attr: 'buyTime', asc: true}]);
             for(let j=0, len2=lmlc[i].records.length; j<len2; j++){
                 delete lmlc[i].records[j].uniqueId
             }
@@ -249,7 +250,7 @@ function requestData() {
                     }, delay);
                     // 同时删除id记录
                     let index = preIds.indexOf(id);
-                    sort.delArrByIndex(preIds, [index]);
+                    preIds = arrDel(preIds, [index]);
                 }
             }, 1000)
         }
