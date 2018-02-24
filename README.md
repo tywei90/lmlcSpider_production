@@ -1,6 +1,10 @@
 # 基于 nodejs 的立马理财爬虫项目
 
-> 技术分析，详见我的[博客](https://www.wty90.com/2018/01/17/lmlc-spider/)
+技术分析，详见我的[博客](https://www.wty90.com/2018/01/17/lmlc-spider/)
+
+线上地址：[点击这里](https://lmlc.wty90.com)
+
+**要是觉得这个项目还不错，别忘记star哦**
 
 ## 一、工程目录分析
 
@@ -35,8 +39,8 @@ views存放html模板
 3. 运行方式
 ```
 npm run dev
-npm run server // 需要带登录的账号和密码参数
-npm run spider // 爬虫代码
+npm run server // 启动后台
+npm run spider your_username your_password // 启动爬虫
 ```
 
 4. 测试学习各页面的爬虫代码
@@ -45,3 +49,6 @@ npm run user  // 爬取立马理财首页的用户购买信息ajax接口
 npm run product  // 爬取立马理财理财页所有产品的ajax接口
 npm run record  // 爬取立马理财产品详情页的投资记录同步页面数据
 ```
+
+## 注意
+开启爬虫需要带网易[立马理财](https://www.lmlc.com/)登录的账号和密码参数。当然如果有网易邮箱，可以直接输入网易邮箱和密码即可。
